@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="section-title">
+  <div>
+    <h1 class="mb-1">My Products</h1>
+    <p class="muted mb-0">Browse featured products and chat instantly.</p>
+    <div style="font-size:12px; opacity:.45; margin-top:2px;">Manufactured by {{ manufacturer_name }}</div>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-dark" href="{{ url_for('admin_login') }}">Admin</a>
+  </div>
+</div>
+
+{% if show_welcome %}
+<div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+  <strong>Welcome!</strong> {{ welcome_message }}
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+<div class="cardx mb-4">
+  <form method="GET" action="{{ url_for('index') }}" class="d-flex gap-2">
+    <input type="text" name="q" class="form-control" placeholder="Search products..." value="{{ search_query or '' }}">
+    <button class="btn btn-primary" type="submit">Search</button>
+  </form>
+</div>
+
+{% if unread_replies %}
+<div class="alert alert-info alert-dismissible fade show" role="alert">
+  <strong>You have {{ unread_replies|length }} replied message(s).</strong>
+  <div class="mt-2">
+    {% for chat in unread_replies %}
+      <a class="btn btn-sm btn-primary me-2 mb-2"
+         href="{{ url_for('private_chat', product_id=chat.product_id) }}">
+        Open Product {{ chat.product_id }}
+      </a>
+    {% endfor %}
+  </div>
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+{% if products %}
+<div id="productCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+  <div class="carousel-inner">
+    {% for product in products[:3] %}
+    <div class="carousel-item {% if loop.first %}active{% endif %}">
+      <div class="hero-slide position-relative" style="height:260px; overflow:hidden; background:#111; border-radius:20px;">
+        {% if product.image %}
+          {% set ext = product.image.split('.')[-1].lower() %}
+          {% if ext in ['mp4', 'webm'] %}
+            <video controls class="w-100 h-100" style="object-fit:contain; background:#000;">
+              <source src="{{ product.image }}">
+            </video>
+          {% else %}
+            <img src="{{ product.image }}" class="d-block w-100 h-100" style="object-fit:contain;" alt="{{ product.name }}">
+          {% endif %}
+        {% else %}
+          <div class="d-flex align-items-center justify-content-center h-100" style="color:white;">
+            <div class="text-center">
+              <h2>{{ product.name }}</h2>
+              <p>{{ product.description }}</p>
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="carousel-caption text-start">
+          <div class="overlay-box">
+            <h2 class="mb-1">{{ product.name }}</h2>
+            <p class="mb-2">{{ product.description }}</p>
+            <a class="btn btn-light btn-sm" href="{{ url_for('private_chat', product_id=product.id) }}">Chat About This</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon"></span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+    <span class="carousel-control-next-icon"></span>
+  </button>
+</div>
+{% endif %}
+
+<div class="row g-4">
+  {% for product in products %}
+  <div class="col-12 col-sm-6 col-lg-4">
+    <div class="cardx h-100">
+      {% if product.image %}
+        {% set ext = product.image.split('.')[-1].lower() %}
+        {% if ext in ['mp4', 'webm'] %}
+          <video controls class="w-100 mb-3" style="height:180px; object-fit:contain; background:#000;">
+            <source src="{{ product.image }}">
+          </video>
+        {% else %}
+          <div class="mb-3 text-center" style="background:#f8f9fa; border-radius:14px; padding:10px; height:180px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+            <img src="{{ product.image }}" alt="{{ product.name }}"
+                 loading="lazy"
+                 style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;">
+          </div>
+        {% endif %}
+      {% endif %}
+
+      <h3 class="mb-1">{{ product.name }}</h3>
+      <p class="muted mb-2">Posted: {{ product.created_at }}</p>
+      <p class="mb-2">{{ product.description }}</p>
+
+      <div class="mb-3">
+        {% if product.old_price %}
+          <span class="text-muted text-decoration-line-through me-2">₦{{ product.old_price }}</span>
+        {% endif %}
+        <span class="fw-bold">₦{{ product.price }}</span>
+      </div>
+
+      <div class="d-flex gap-2">
+        <a class="btn btn-primary btn-sm" href="{{ url_for('private_chat', product_id=product.id) }}">Open Chat</a>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-12">
+    <div class="cardx">No products available yet.</div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
