@@ -115,7 +115,7 @@
       position: fixed;
       inset: 0;
       z-index: 99999;
-      display: flex;
+      display: none;
       align-items: center;
       justify-content: center;
       background:
@@ -219,10 +219,16 @@
     document.addEventListener('DOMContentLoaded', function () {
       const welcome = document.getElementById('welcomeOverlay');
       if (welcome) {
-        setTimeout(() => {
-          welcome.classList.add('hide');
-          setTimeout(() => welcome.remove(), 1000);
-        }, 5000);
+        if (!sessionStorage.getItem('welcomeShown')) {
+          sessionStorage.setItem('welcomeShown', 'true');
+          welcome.style.display = 'flex';
+          setTimeout(() => {
+            welcome.classList.add('hide');
+            setTimeout(() => welcome.remove(), 1000);
+          }, 5000);
+        } else {
+          welcome.remove();
+        }
       }
     });
   </script>
