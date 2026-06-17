@@ -149,7 +149,7 @@
       animation: glow 2.2s ease-in-out infinite alternate;
     }
     .welcome-subtitle {
-      font-size: clamp(1rem, 2vw, 1.3rem);
+      font-size: clamp(0.75rem, 1.5vw, 1rem);
       color: rgba(255,255,255,.85);
       margin-bottom: 8px;
     }
@@ -164,6 +164,7 @@
   </style>
 </head>
 <body>
+  {% if request.path == '/' %}
   <div id="welcomeOverlay">
     <div class="welcome-box">
       <div class="welcome-title">Welcome to Picass's electronics</div>
@@ -171,6 +172,7 @@
       <p class="welcome-subtitle">Welcome — you're in the right place!</p>
     </div>
   </div>
+  {% endif %}
 
   <div class="topbar">
     <div class="topbar-left">
