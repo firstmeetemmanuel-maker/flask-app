@@ -35,27 +35,30 @@
         {% if product.image %}
           {% set ext = product.image.split('.')[-1].lower() %}
           {% if ext in ['mp4', 'webm'] %}
-            <video controls class="w-100" style="max-height:280px; object-fit:contain; background:#000;">
+            <video controls class="w-100" style="max-height:300px; object-fit:contain; background:#000; border-radius:14px;">
               <source src="{{ product.image }}">
             </video>
           {% else %}
-            <div style="background:#f8f9fa; border-radius:14px; padding:10px; height:280px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+            <div style="background:#f8f9fa; border-radius:14px; padding:10px; height:300px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
               <img src="{{ product.image }}" alt="{{ product.name }}"
                    style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;">
             </div>
           {% endif %}
         {% endif %}
       </div>
+
       <div class="col-md-7">
-        <h2>{{ product.name }}</h2>
-        <p class="muted">{{ product.created_at }}</p>
-        <p>{{ product.description }}</p>
+        <h2 class="mb-2">{{ product.name }}</h2>
+        <p class="muted mb-2">{{ product.created_at }}</p>
+        <p class="mb-3">{{ product.description }}</p>
+
         <div class="mb-3">
           {% if product.old_price %}
             <span class="text-muted text-decoration-line-through me-2">₦{{ product.old_price }}</span>
           {% endif %}
           <h4 class="d-inline">₦{{ product.price }}</h4>
         </div>
+
         <div class="d-flex flex-wrap gap-2 mt-3">
           <span class="badge text-bg-primary">Product context</span>
           <span class="badge text-bg-success">Customer chat</span>
@@ -69,12 +72,18 @@
 </div>
 
 <div class="cardx mb-4">
-  <h2 class="mb-3">Conversation</h2>
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h2 class="mb-0">Conversation</h2>
+    <span class="badge bg-secondary">{{ chat.messages|length }} message(s)</span>
+  </div>
+
   {% for msg in chat.messages %}
     <div class="chat-msg">
-      <div><strong>{{ msg.sender|capitalize }}</strong></div>
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
+        <strong>{{ msg.sender|capitalize }}</strong>
+        <span class="muted" style="font-size:12px;">{{ msg.time }}</span>
+      </div>
       <div>{{ msg.text }}</div>
-      <div class="muted">{{ msg.time }}</div>
     </div>
   {% else %}
     <p class="muted mb-0">No messages yet.</p>
