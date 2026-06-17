@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="section-title">
+  <div>
+    <h1 class="mb-1">
+      Admin Dashboard
+      {% if pending_chat_count and pending_chat_count > 0 %}
+        <a href="#pendingChatsPanel"
+           data-bs-toggle="offcanvas"
+           role="button"
+           aria-controls="pendingChatsPanel"
+           class="badge rounded-pill bg-warning text-dark ms-2 text-decoration-none">
+          {{ pending_chat_count }}
+        </a>
+      {% endif %}
+    </h1>
+    <p class="muted mb-0">Manage products and conversations.</p>
+  </div>
+
+  <div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-outline-primary" href="{{ url_for('admin_settings') }}">Admin Settings</a>
+    <a class="btn btn-dark" href="{{ url_for('logout') }}">Logout</a>
+  </div>
+</div>
+
+{% if pending_chats and pending_chats|length > 0 %}
+<div class="offcanvas offcanvas-end" tabindex="-1" id="pendingChatsPanel" aria-labelledby="pendingChatsPanelLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="pendingChatsPanelLabel">
+      Pending Messages ({{ pending_chats|length }})
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body">
+    <div class="list-group">
+      {% for chat in pending_chats %}
+        <a href="{{ url_for('admin_chat', chat_id=chat.chat_id) }}"
+           class="list-group-item list-group-item-action">
+          <div class="d-flex w-100 justify-content-between align-items-start">
+            <div>
+              <div class="fw-bold">Chat ID: {{ chat.chat_id }}</div>
+              <div class="small text-muted">Product ID: {{ chat.product_id }}</div>
+              <div class="small">{{ chat.last_message }}</div>
+            </div>
+            <span class="badge bg-warning text-dark ms-2">Open</span>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="cardx mb-4">
+  <h2>Add Product</h2>
+  <form action="{{ url_for('add_product') }}" method="POST" enctype="multipart/form-data" class="row g-3">
+    <div class="col-md-6">
+      <label class="form-label">Product Name</label>
+      <input class="form-control" type="text" name="product_name" required>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Price</label>
+      <input class="form-control" type="text" name="product_price" required>
+    </div>
+    <div class="col-12">
+      <label class="form-label">Description</label>
+      <textarea class="form-control" name="product_description" rows="4" required></textarea>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Upload Image/Video</label>
+      <input class="form-control" type="file" name="media" accept="image/*,video/*">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Or Image URL</label>
+      <input class="form-control" type="text" name="product_image" placeholder="https://...">
+    </div>
+    <div class="col-12">
+      <button class="btn btn-primary" type="submit">Add Product</button>
+    </div>
+  </form>
+</div>
+
+<div class="row g-4 mb-4">
+  {% for product in products %}
+  <div class="col-12 col-md-6 col-lg-4">
+    <div class="cardx h-100">
+      {% if product.image %}
+        {% set ext = product.image.split('.')[-1].lower() %}
+        {% if ext in ['mp4', 'webm'] %}
+          <video controls class="w-100 mb-3" style="max-height: 280px; object-fit: contain; background: #000;">
+            <source src="{{ product.image }}">
+          </video>
+        {% else %}
+          <div class="mb-3 text-center" style="background:#f8f9fa; border-radius:14px; padding:10px;">
+            <img src="{{ product.image }}" alt="{{ product.name }}"
+                 style="max-width:100%; max-height:320px; width:auto; height:auto; object-fit:contain;">
+          </div>
+        {% endif %}
+      {% endif %}
+
+      <h4>{{ product.name }}</h4>
+      <div class="muted mb-2">{{ product.created_at }}</div>
+      <p>{{ product.description }}</p>
+
+      <div class="mb-3">
+        {% if product.old_price %}
+          <span class="text-muted text-decoration-line-through me-2">₦{{ product.old_price }}</span>
+        {% endif %}
+        <span class="fw-bold">₦{{ product.price }}</span>
+      </div>
+
+      <form method="POST" action="{{ url_for('update_price', product_id=product.id) }}" class="mb-3">
+        <div class="input-group">
+          <input type="text" class="form-control" name="new_price" placeholder="Update price" required>
+          <button class="btn btn-outline-primary" type="submit">Update Price</button>
+        </div>
+      </form>
+
+      <a class="btn btn-danger" href="{{ url_for('delete_product', product_id=product.id) }}">Delete</a>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-12"><div class="cardx">No products yet.</div></div>
+  {% endfor %}
+</div>
+
+<div class="cardx">
+  <h2 class="mb-3">Chats</h2>
+  {% for chat in chats %}
+    <div class="chat-msg">
+      <div><strong>Chat ID:</strong> {{ chat.chat_id }}</div>
+      <div><strong>Product ID:</strong> {{ chat.product_id }}</div>
+      <div><strong>Last Message:</strong> {{ chat.last_message }}</div>
+      <div><strong>Updated:</strong> {{ chat.updated_at }}</div>
+      <div class="mt-2">
+        {% if chat.status == 'new' %}
+          <span class="badge text-bg-secondary">New</span>
+        {% elif chat.status == 'pending' %}
+          <span class="badge text-bg-warning">Pending</span>
+        {% elif chat.status == 'replied' %}
+          <span class="badge text-bg-success">Replied</span>
+        {% endif %}
+      </div>
+      <div class="mt-2">
+        <a class="btn btn-primary btn-sm" href="{{ url_for('admin_chat', chat_id=chat.chat_id) }}">Open Chat</a>
+      </div>
+    </div>
+  {% else %}
+    <p class="muted mb-0">No chats yet.</p>
+  {% endfor %}
+</div>
+{% endblock %}
