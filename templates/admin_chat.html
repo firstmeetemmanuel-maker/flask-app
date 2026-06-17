@@ -6,8 +6,13 @@
     <h1 class="mb-1">Admin Chat</h1>
     <p class="muted mb-0">Reply to the customer with full product context.</p>
   </div>
-  <div>
+  <div class="d-flex gap-2 flex-wrap">
     <a class="btn btn-dark" href="{{ url_for('admin_dashboard') }}">Back Dashboard</a>
+    <form method="POST"
+          action="{{ url_for('clear_admin_chat', chat_id=chat_id) }}"
+          onsubmit="return confirm('Clear this chat? This will delete all messages in this conversation.')">
+      <button type="submit" class="btn btn-danger">Clear Chat</button>
+    </form>
   </div>
 </div>
 
