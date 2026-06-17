@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "name": "samsung",
+    "description": "designing",
+    "price": "34k",
+    "old_price": "",
+    "image": "/static/uploads/Diagram4.jpeg",
+    "created_at": "2026-06-16 16:30:34"
+  },
+  {
+    "id": 2,
+    "name": "samsung",
+    "description": "designing",
+    "price": "34k",
+    "old_price": "",
+    "image": "/static/uploads/Diagram4.jpeg",
+    "created_at": "2026-06-16 16:30:34"
+  }
+]

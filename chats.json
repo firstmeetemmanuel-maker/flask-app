@@ -1,0 +1,117 @@
+{
+  "3_92f05cfc-f18d-4be8-923d-2fc294f5fa05": {
+    "product_id": "3",
+    "visitor_id": "92f05cfc-f18d-4be8-923d-2fc294f5fa05",
+    "messages": [
+      {
+        "sender": "visitor",
+        "text": "how much",
+        "time": "2026-06-13 16:10:19"
+      },
+      {
+        "sender": "admin",
+        "text": "good",
+        "time": "2026-06-14 14:41:39"
+      },
+      {
+        "sender": "admin",
+        "text": "okay",
+        "time": "2026-06-15 06:01:11"
+      }
+    ],
+    "updated_at": "2026-06-15 06:01:11",
+    "status": "replied",
+    "customer_seen_reply": false
+  },
+  "3_96c5b6b5-1b65-4dbf-8dfe-85e27a862b33": {
+    "product_id": 3,
+    "visitor_id": "96c5b6b5-1b65-4dbf-8dfe-85e27a862b33",
+    "messages": [
+      {
+        "sender": "visitor",
+        "text": "send am come na",
+        "time": "2026-06-14 04:32:17"
+      },
+      {
+        "sender": "admin",
+        "text": "send your account number",
+        "time": "2026-06-14 04:33:15"
+      },
+      {
+        "sender": "admin",
+        "text": "or you what come for whatsapp",
+        "time": "2026-06-14 04:54:22"
+      },
+      {
+        "sender": "admin",
+        "text": "okay",
+        "time": "2026-06-14 14:42:24"
+      }
+    ],
+    "updated_at": "2026-06-14 14:42:24",
+    "status": "replied",
+    "customer_seen_reply": false
+  },
+  "3_06dfe948-2cd5-46f0-a233-0e08c793227a": {
+    "product_id": 3,
+    "visitor_id": "06dfe948-2cd5-46f0-a233-0e08c793227a",
+    "messages": [
+      {
+        "sender": "visitor",
+        "text": "i want to buy it",
+        "time": "2026-06-14 05:28:13"
+      },
+      {
+        "sender": "admin",
+        "text": "okay send money na",
+        "time": "2026-06-14 05:29:09"
+      },
+      {
+        "sender": "visitor",
+        "text": "that good",
+        "time": "2026-06-14 06:28:15"
+      },
+      {
+        "sender": "admin",
+        "text": "okay na",
+        "time": "2026-06-14 14:41:10"
+      }
+    ],
+    "updated_at": "2026-06-14 14:41:10",
+    "status": "replied",
+    "customer_seen_reply": false
+  },
+  "5_19fabf87-96a6-4d9d-9a13-587fb658f85c": {
+    "product_id": 5,
+    "visitor_id": "19fabf87-96a6-4d9d-9a13-587fb658f85c",
+    "messages": [
+      {
+        "sender": "visitor",
+        "text": "afa",
+        "time": "2026-06-16 04:36:22"
+      },
+      {
+        "sender": "admin",
+        "text": "ok",
+        "time": "2026-06-16 04:36:38"
+      }
+    ],
+    "updated_at": "2026-06-16 04:36:38",
+    "status": "replied",
+    "customer_seen_reply": true
+  },
+  "4_f5960e44-e8f3-4a5e-9b80-fd8648ca64f9": {
+    "product_id": 4,
+    "visitor_id": "f5960e44-e8f3-4a5e-9b80-fd8648ca64f9",
+    "messages": [
+      {
+        "sender": "visitor",
+        "text": "hi afa",
+        "time": "2026-06-16 05:19:50"
+      }
+    ],
+    "updated_at": "2026-06-16 05:19:50",
+    "status": "pending",
+    "customer_seen_reply": false
+  }
+}
