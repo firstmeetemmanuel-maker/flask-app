@@ -318,6 +318,21 @@ def private_chat(product_id):
 
     return render_template('chat.html', product=product, chat=chat, chat_id=chat_id)
 
+@app.route('/product/<int:product_id>/chat/clear', methods=['POST'])
+def clear_customer_chat(product_id):
+    visitor_id = get_visitor_id()
+    chat_id = f"{product_id}_{visitor_id}"
+    chats = load_chats()
+
+    if chat_id in chats:
+        chats.pop(chat_id, None)
+        save_chats(chats)
+        flash('Chat cleared successfully.', 'success')
+    else:
+        flash('No chat found to clear.', 'warning')
+
+    return redirect(url_for('index'))
+
 @app.route('/admin/chat/<chat_id>', methods=['GET', 'POST'])
 def admin_chat(chat_id):
     if not session.get('admin_logged_in'):
@@ -345,6 +360,21 @@ def admin_chat(chat_id):
     products = load_products()
     product = next((p for p in products if int(p.get('id', 0)) == int(chats[chat_id]['product_id'])), None)
     return render_template('admin_chat.html', chat=chats[chat_id], product=product, chat_id=chat_id)
+
+@app.route('/admin/chat/<chat_id>/clear', methods=['POST'])
+def clear_admin_chat(chat_id):
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+
+    chats = load_chats()
+    if chat_id in chats:
+        chats.pop(chat_id, None)
+        save_chats(chats)
+        flash('Chat cleared successfully.', 'success')
+    else:
+        flash('Chat not found.', 'warning')
+
+    return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/delete_product/<int:product_id>')
 def delete_product(product_id):
