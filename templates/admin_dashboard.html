@@ -142,8 +142,13 @@
           <span class="badge text-bg-success">Replied</span>
         {% endif %}
       </div>
-      <div class="mt-2">
+      <div class="mt-2 d-flex gap-2 flex-wrap">
         <a class="btn btn-primary btn-sm" href="{{ url_for('admin_chat', chat_id=chat.chat_id) }}">Open Chat</a>
+        <form method="POST"
+              action="{{ url_for('clear_admin_chat', chat_id=chat.chat_id) }}"
+              onsubmit="return confirm('Clear this chat? This will delete all messages in this conversation.')">
+          <button type="submit" class="btn btn-danger btn-sm">Clear Chat</button>
+        </form>
       </div>
     </div>
   {% else %}
