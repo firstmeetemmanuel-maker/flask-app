@@ -111,9 +111,7 @@
       margin-bottom: 12px;
       background: rgba(127,127,127,.04);
     }
-
-    #welcomeOverlay,
-    #farewellOverlay {
+    #welcomeOverlay {
       position: fixed;
       inset: 0;
       z-index: 99999;
@@ -127,13 +125,10 @@
       opacity: 1;
       transition: opacity 1s ease;
     }
-
-    #welcomeOverlay.hide,
-    #farewellOverlay.hide {
+    #welcomeOverlay.hide {
       opacity: 0;
       pointer-events: none;
     }
-
     .welcome-box {
       text-align: center;
       padding: 34px 28px;
@@ -146,7 +141,6 @@
       animation: popIn 1.2s ease forwards;
       max-width: 92vw;
     }
-
     .welcome-title {
       font-size: clamp(2rem, 4vw, 4rem);
       font-weight: 800;
@@ -154,18 +148,15 @@
       margin-bottom: 10px;
       animation: glow 2.2s ease-in-out infinite alternate;
     }
-
     .welcome-subtitle {
       font-size: clamp(1rem, 2vw, 1.3rem);
       color: rgba(255,255,255,.85);
       margin-bottom: 8px;
     }
-
     @keyframes popIn {
       from { transform: translateY(20px) scale(0.9); opacity: 0; }
       to { transform: translateY(0) scale(1); opacity: 1; }
     }
-
     @keyframes glow {
       from { text-shadow: 0 0 10px rgba(96,165,250,.25), 0 0 20px rgba(96,165,250,.15); }
       to { text-shadow: 0 0 18px rgba(96,165,250,.75), 0 0 34px rgba(96,165,250,.35); }
@@ -184,14 +175,12 @@
   <div class="topbar">
     <div class="topbar-left">
       <strong>Product Site</strong>
-
       {% if unread_reply_count and unread_reply_count > 0 %}
         <a href="{{ url_for('index') }}" class="d-flex align-items-center gap-1">
           <span>Notifications</span>
           <span class="badge rounded-pill bg-danger">{{ unread_reply_count }}</span>
         </a>
       {% endif %}
-
       {% if session.get('admin_logged_in') and pending_chat_count and pending_chat_count > 0 %}
         <a href="{{ url_for('admin_dashboard') }}" class="d-flex align-items-center gap-1">
           <span>Admin Alerts</span>
@@ -199,7 +188,6 @@
         </a>
       {% endif %}
     </div>
-
     <button type="button" onclick="toggleTheme()">Toggle Theme</button>
   </div>
 
@@ -214,7 +202,6 @@
         {% endfor %}
       {% endif %}
     {% endwith %}
-
     {% block content %}{% endblock %}
   </div>
 
@@ -224,11 +211,9 @@
       document.body.classList.toggle('dark');
       localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
     }
-
     if (localStorage.getItem('theme') === 'dark') {
       document.body.classList.add('dark');
     }
-
     document.addEventListener('DOMContentLoaded', function () {
       const welcome = document.getElementById('welcomeOverlay');
       if (welcome) {
@@ -237,29 +222,6 @@
           setTimeout(() => welcome.remove(), 1000);
         }, 5000);
       }
-
-      if (localStorage.getItem('showFarewell') === 'true') {
-        localStorage.removeItem('showFarewell');
-
-        const overlay = document.createElement('div');
-        overlay.id = 'farewellOverlay';
-        overlay.innerHTML = `
-          <div class="welcome-box">
-            <div class="welcome-title">Thank you for your patronage</div>
-            <p class="welcome-subtitle">Come back next time.</p>
-          </div>
-        `;
-        document.body.appendChild(overlay);
-
-        setTimeout(() => {
-          overlay.classList.add('hide');
-          setTimeout(() => overlay.remove(), 1000);
-        }, 4000);
-      }
-    });
-
-    window.addEventListener('beforeunload', function () {
-      localStorage.setItem('showFarewell', 'true');
     });
   </script>
 </body>
