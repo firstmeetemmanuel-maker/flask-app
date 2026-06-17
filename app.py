@@ -112,6 +112,7 @@ def inject_notifications():
 
 @app.route('/')
 def index():
+    skip_welcome = session.pop('skip_welcome', False)
     products = load_products()
     chats = load_chats()
     visitor_id = session.get('visitor_id')
@@ -137,7 +138,8 @@ def index():
         show_welcome=True,
         search_query=search_query,
         manufacturer_name="Bemzy",
-        welcome_message="Welcome to Picass's electronics"
+        welcome_message="Welcome to Picass's electronics",
+        skip_welcome=skip_welcome
     )
 
 @app.route('/admin', methods=['GET', 'POST'])
@@ -357,6 +359,7 @@ def delete_product(product_id):
 def logout():
     session.pop('admin_logged_in', None)
     session.pop('admin_name', None)
+    session['skip_welcome'] = True
     return redirect(url_for('index'))
 
 @app.errorhandler(413)
