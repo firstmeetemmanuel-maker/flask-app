@@ -164,7 +164,7 @@
   </style>
 </head>
 <body>
-  {% if request.path == '/' %}
+  {% if request.path == '/' and not skip_welcome %}
   <div id="welcomeOverlay">
     <div class="welcome-box">
       <div class="welcome-title">Welcome to Picass's electronics</div>
@@ -219,16 +219,11 @@
     document.addEventListener('DOMContentLoaded', function () {
       const welcome = document.getElementById('welcomeOverlay');
       if (welcome) {
-        if (!sessionStorage.getItem('welcomeShown')) {
-          sessionStorage.setItem('welcomeShown', 'true');
-          welcome.style.display = 'flex';
-          setTimeout(() => {
-            welcome.classList.add('hide');
-            setTimeout(() => welcome.remove(), 1000);
-          }, 5000);
-        } else {
-          welcome.remove();
-        }
+        welcome.style.display = 'flex';
+        setTimeout(() => {
+          welcome.classList.add('hide');
+          setTimeout(() => welcome.remove(), 1000);
+        }, 5000);
       }
     });
   </script>
