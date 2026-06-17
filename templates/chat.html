@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="section-title">
+  <div>
+    <h1 class="mb-1">Customer Chat</h1>
+    <p class="muted mb-0">Talk directly about the selected product.</p>
+  </div>
+  <div>
+    <a class="btn btn-dark" href="{{ url_for('index') }}">Back Home</a>
+  </div>
+</div>
+
+{% if chat and chat.status == 'replied' and not chat.customer_seen_reply %}
+<div class="alert alert-info alert-dismissible fade show" role="alert">
+  You have a new message from the admin. Open the conversation below.
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+<div class="cardx mb-4">
+  {% if product %}
+    <div class="row g-4 align-items-start">
+      <div class="col-md-5">
+        {% if product.image %}
+          {% set ext = product.image.split('.')[-1].lower() %}
+          {% if ext in ['mp4', 'webm'] %}
+            <video controls class="w-100" style="max-height:280px; object-fit:contain; background:#000;">
+              <source src="{{ product.image }}">
+            </video>
+          {% else %}
+            <div style="background:#f8f9fa; border-radius:14px; padding:10px; height:280px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+              <img src="{{ product.image }}" alt="{{ product.name }}"
+                   style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;">
+            </div>
+          {% endif %}
+        {% endif %}
+      </div>
+      <div class="col-md-7">
+        <h2>{{ product.name }}</h2>
+        <p class="muted">{{ product.created_at }}</p>
+        <p>{{ product.description }}</p>
+        <h4>₦{{ product.price }}</h4>
+        <div class="d-flex flex-wrap gap-2 mt-3">
+          <span class="badge text-bg-primary">Fast reply</span>
+          <span class="badge text-bg-success">Product support</span>
+          <span class="badge text-bg-dark">Seller chat</span>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <p class="mb-0 text-danger">Product not found.</p>
+  {% endif %}
+</div>
+
+<div class="cardx mb-4">
+  <h2 class="mb-3">Conversation</h2>
+  {% for msg in chat.messages %}
+    <div class="chat-msg">
+      <div><strong>{{ msg.sender|capitalize }}</strong></div>
+      <div>{{ msg.text }}</div>
+      <div class="muted">{{ msg.time }}</div>
+    </div>
+  {% else %}
+    <p class="muted mb-0">No messages yet. Be the first to ask about this product.</p>
+  {% endfor %}
+</div>
+
+<div class="cardx">
+  <h2 class="mb-3">Send Message</h2>
+  <form method="POST">
+    <textarea name="message" class="form-control mb-3" rows="4" placeholder="Hi, I want to ask about this product..." required></textarea>
+    <button class="btn btn-primary" type="submit">Send</button>
+  </form>
+</div>
+{% endblock %}
