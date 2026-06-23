@@ -16,7 +16,6 @@ app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'webm'}
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# MongoDB connection
 MONGO_URI = os.environ.get('MONGO_URI', '')
 client = MongoClient(MONGO_URI)
 db = client['picass_electronics']
@@ -33,32 +32,24 @@ def load_products():
             pass
     return products
 
-def save_products(products):
-    products_col.delete_many({})
-    if products:
-        products_col.insert_many(products)
-
 def load_chats():
     chats = {}
     for chat in chats_col.find({}, {'_id': 0}):
         chats[chat['chat_id']] = chat
     return chats
 
-def save_chats(chats):
-    for chat_id, chat in chats.items():
-        chat['chat_id'] = chat_id
-        chats_col.update_one(
-            {'chat_id': chat_id},
-            {'$set': chat},
-            upsert=True
-        )
-
 def load_admin():
     admin = admin_col.find_one({}, {'_id': 0})
     if not admin:
         admin = {
             "username": "admin",
-            "password_hash": generate_password_hash("pathaan2345")
+            "password_hash": generate_password_hash("pathaan2345"),
+            "shop_name": "Picass's Electronics",
+            "whatsapp": "",
+            "phone": "",
+            "location": "",
+            "opening_hours": "",
+            "footer_message": "Quality electronics at affordable prices"
         }
         save_admin(admin)
     return admin
@@ -90,10 +81,18 @@ def inject_notifications():
         if visitor_id and chat.get('visitor_id') == visitor_id and chat.get('status') == 'replied' and not chat.get('customer_seen_reply'):
             unread_reply_count += 1
 
+    admin = load_admin()
+
     return dict(
         unread_reply_count=unread_reply_count,
         pending_chat_count=pending_chat_count,
-        admin_name=session.get('admin_name')
+        admin_name=session.get('admin_name'),
+        shop_name=admin.get('shop_name', "Picass's Electronics"),
+        whatsapp=admin.get('whatsapp', ''),
+        phone=admin.get('phone', ''),
+        location=admin.get('location', ''),
+        opening_hours=admin.get('opening_hours', ''),
+        footer_message=admin.get('footer_message', '')
     )
 
 @app.route('/')
@@ -162,9 +161,16 @@ def admin_settings():
         if new_password:
             admin['password_hash'] = generate_password_hash(new_password)
 
+        admin['shop_name'] = request.form.get('shop_name', '').strip()
+        admin['whatsapp'] = request.form.get('whatsapp', '').strip()
+        admin['phone'] = request.form.get('phone', '').strip()
+        admin['location'] = request.form.get('location', '').strip()
+        admin['opening_hours'] = request.form.get('opening_hours', '').strip()
+        admin['footer_message'] = request.form.get('footer_message', '').strip()
+
         save_admin(admin)
         session['admin_name'] = admin['username']
-        flash('Admin profile updated successfully.', 'success')
+        flash('Settings updated successfully.', 'success')
         return redirect(url_for('admin_settings'))
 
     return render_template('admin_settings.html', admin=admin)
