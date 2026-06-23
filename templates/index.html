@@ -3,39 +3,27 @@
 {% block content %}
 <div class="section-title">
   <div>
-    <h1 class="mb-1">My Products</h1>
+    <h1 class="mb-1">Our Products</h1>
     <p class="muted mb-0">Browse featured products and chat instantly.</p>
-    <div style="font-size:12px; opacity:.6; margin-top:4px;">Manufactured by {{ manufacturer_name }}</div>
   </div>
-  <div class="d-flex gap-2 flex-wrap">
+  <div class="d-flex gap-2">
     <a class="btn btn-dark" href="{{ url_for('admin_login') }}">Admin</a>
   </div>
 </div>
 
-{% if show_welcome %}
-<div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
-  <strong>Welcome!</strong> {{ welcome_message }}
-  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-</div>
-{% endif %}
-
 <div class="cardx mb-4">
-  <form method="GET" action="{{ url_for('index') }}" class="row g-2 align-items-center">
-    <div class="col-12 col-md-10">
-      <input type="text" name="q" class="form-control form-control-lg" placeholder="Search products..." value="{{ search_query or '' }}">
-    </div>
-    <div class="col-12 col-md-2 d-grid">
-      <button class="btn btn-primary btn-lg" type="submit">Search</button>
-    </div>
+  <form method="GET" action="{{ url_for('index') }}" class="d-flex gap-2">
+    <input type="text" name="q" class="form-control" placeholder="Search products..." value="{{ search_query or '' }}">
+    <button class="btn btn-primary" type="submit">Search</button>
   </form>
 </div>
 
 {% if unread_replies %}
-<div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
+<div class="alert alert-info alert-dismissible fade show" role="alert">
   <strong>You have {{ unread_replies|length }} replied message(s).</strong>
-  <div class="mt-3 d-flex flex-wrap gap-2">
+  <div class="mt-2">
     {% for chat in unread_replies %}
-      <a class="btn btn-sm btn-primary"
+      <a class="btn btn-sm btn-primary me-2 mb-2"
          href="{{ url_for('private_chat', product_id=chat.product_id) }}">
         Open Product {{ chat.product_id }}
       </a>
@@ -47,29 +35,18 @@
 
 {% if products %}
 <div id="productCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
-  <div class="carousel-indicators">
-    {% for product in products[:3] %}
-      <button type="button"
-              data-bs-target="#productCarousel"
-              data-bs-slide-to="{{ loop.index0 }}"
-              class="{% if loop.first %}active{% endif %}"
-              aria-current="{% if loop.first %}true{% endif %}"
-              aria-label="Slide {{ loop.index }}"></button>
-    {% endfor %}
-  </div>
-
   <div class="carousel-inner">
     {% for product in products[:3] %}
     <div class="carousel-item {% if loop.first %}active{% endif %}">
-      <div class="hero-slide position-relative" style="height:320px; background:#111;">
+      <div class="hero-slide position-relative" style="height:260px; overflow:hidden; background:#111; border-radius:20px;">
         {% if product.image %}
           {% set ext = product.image.split('.')[-1].lower() %}
           {% if ext in ['mp4', 'webm'] %}
-            <video controls class="w-100 h-100" style="object-fit:cover; background:#000;">
+            <video controls class="w-100 h-100" style="object-fit:contain; background:#000;">
               <source src="{{ product.image }}">
             </video>
           {% else %}
-            <img src="{{ product.image }}" class="d-block w-100 h-100" style="object-fit:cover;" alt="{{ product.name }}">
+            <img src="{{ product.image }}" class="d-block w-100 h-100" style="object-fit:contain;" alt="{{ product.name }}">
           {% endif %}
         {% else %}
           <div class="d-flex align-items-center justify-content-center h-100" style="color:white;">
@@ -79,7 +56,6 @@
             </div>
           </div>
         {% endif %}
-
         <div class="carousel-caption text-start">
           <div class="overlay-box">
             <h2 class="mb-1">{{ product.name }}</h2>
@@ -91,7 +67,6 @@
     </div>
     {% endfor %}
   </div>
-
   <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
     <span class="carousel-control-prev-icon"></span>
   </button>
@@ -108,11 +83,11 @@
       {% if product.image %}
         {% set ext = product.image.split('.')[-1].lower() %}
         {% if ext in ['mp4', 'webm'] %}
-          <video controls class="w-100 mb-3" style="height:220px; object-fit:cover; background:#000;">
+          <video controls class="w-100 mb-3" style="height:180px; object-fit:contain; background:#000;">
             <source src="{{ product.image }}">
           </video>
         {% else %}
-          <div class="mb-3 text-center" style="background:#f8f9fa; border-radius:14px; padding:10px; height:220px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+          <div class="mb-3 text-center" style="background:#f8f9fa; border-radius:14px; padding:10px; height:180px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
             <img src="{{ product.image }}" alt="{{ product.name }}"
                  loading="lazy"
                  style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;">
@@ -121,8 +96,8 @@
       {% endif %}
 
       <h3 class="mb-1">{{ product.name }}</h3>
-      <p class="muted mb-2">Posted: {{ product.created_at }}</p>
-      <p class="mb-3">{{ product.description }}</p>
+      <p class="muted mb-2" style="font-size:12px;">Posted: {{ product.created_at }}</p>
+      <p class="mb-2">{{ product.description }}</p>
 
       <div class="mb-3">
         {% if product.old_price %}
@@ -132,7 +107,14 @@
       </div>
 
       <div class="d-flex gap-2 flex-wrap">
-        <a class="btn btn-primary btn-sm" href="{{ url_for('private_chat', product_id=product.id) }}">Open Chat</a>
+        <a class="btn btn-primary btn-sm" href="{{ url_for('private_chat', product_id=product.id) }}">💬 Chat</a>
+        {% if whatsapp %}
+          <a class="btn btn-success btn-sm"
+             href="https://wa.me/{{ whatsapp|replace('+','') }}?text=Hi!%20I%27m%20interested%20in%20{{ product.name|urlencode }}"
+             target="_blank">
+            📲 WhatsApp
+          </a>
+        {% endif %}
       </div>
     </div>
   </div>
