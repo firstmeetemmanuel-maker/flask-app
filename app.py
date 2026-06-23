@@ -341,6 +341,25 @@ def admin_chat(chat_id):
     product = products_col.find_one({'id': int(chat.get('product_id', 0))}, {'_id': 0})
     return render_template('admin_chat.html', chat=chat, product=product, chat_id=chat_id)
 
+@app.route('/chat/<chat_id>/clear', methods=['POST'])
+def clear_chat(chat_id):
+    chat = chats_col.find_one({'chat_id': chat_id}, {'_id': 0})
+    if not chat:
+        return redirect(url_for('index'))
+
+    visitor_id = session.get('visitor_id')
+    is_admin = session.get('admin_logged_in')
+    is_owner = visitor_id and chat.get('visitor_id') == visitor_id
+
+    if not is_admin and not is_owner:
+        return redirect(url_for('index'))
+
+    chats_col.delete_one({'chat_id': chat_id})
+
+    if is_admin:
+        return redirect(url_for('admin_dashboard'))
+    return redirect(url_for('index'))
+
 @app.route('/admin/delete_product/<int:product_id>')
 def delete_product(product_id):
     if not session.get('admin_logged_in'):
