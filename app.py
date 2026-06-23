@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
-import json
+from pymongo import MongoClient
 import os
 import uuid
 from datetime import datetime
@@ -16,41 +16,16 @@ app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'webm'}
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-PRODUCTS_FILE = os.path.join(BASE_DIR, 'products.json')
-CHATS_FILE = os.path.join(BASE_DIR, 'chats.json')
-ADMIN_FILE = os.path.join(BASE_DIR, 'admin.json')
-
-_JSON_CACHE = {}
-
-def load_json(path, default):
-    try:
-        mtime = os.path.getmtime(path)
-    except OSError:
-        return default
-
-    cached = _JSON_CACHE.get(path)
-    if cached and cached['mtime'] == mtime:
-        return cached['data']
-
-    with open(path, 'r', encoding='utf-8') as f:
-        try:
-            data = json.load(f)
-        except:
-            data = default
-
-    _JSON_CACHE[path] = {'mtime': mtime, 'data': data}
-    return data
-
-def save_json(path, data):
-    with open(path, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=2)
-    try:
-        _JSON_CACHE[path] = {'mtime': os.path.getmtime(path), 'data': data}
-    except OSError:
-        pass
+# MongoDB connection
+MONGO_URI = os.environ.get('MONGO_URI', '')
+client = MongoClient(MONGO_URI)
+db = client['picass_electronics']
+products_col = db['products']
+chats_col = db['chats']
+admin_col = db['admin']
 
 def load_products():
-    products = load_json(PRODUCTS_FILE, [])
+    products = list(products_col.find({}, {'_id': 0}))
     for p in products:
         try:
             p['id'] = int(p['id'])
@@ -59,16 +34,27 @@ def load_products():
     return products
 
 def save_products(products):
-    save_json(PRODUCTS_FILE, products)
+    products_col.delete_many({})
+    if products:
+        products_col.insert_many(products)
 
 def load_chats():
-    return load_json(CHATS_FILE, {})
+    chats = {}
+    for chat in chats_col.find({}, {'_id': 0}):
+        chats[chat['chat_id']] = chat
+    return chats
 
 def save_chats(chats):
-    save_json(CHATS_FILE, chats)
+    for chat_id, chat in chats.items():
+        chat['chat_id'] = chat_id
+        chats_col.update_one(
+            {'chat_id': chat_id},
+            {'$set': chat},
+            upsert=True
+        )
 
 def load_admin():
-    admin = load_json(ADMIN_FILE, {})
+    admin = admin_col.find_one({}, {'_id': 0})
     if not admin:
         admin = {
             "username": "admin",
@@ -78,7 +64,7 @@ def load_admin():
     return admin
 
 def save_admin(admin):
-    save_json(ADMIN_FILE, admin)
+    admin_col.update_one({}, {'$set': admin}, upsert=True)
 
 def get_visitor_id():
     if 'visitor_id' not in session:
@@ -249,8 +235,7 @@ def add_product():
         'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     }
 
-    products.append(new_product)
-    save_products(products)
+    products_col.insert_one({**new_product, '_id': str(uuid.uuid4())})
     flash('Product added successfully', 'success')
     return redirect(url_for('admin_dashboard'))
 
@@ -259,32 +244,31 @@ def update_price(product_id):
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
 
-    products = load_products()
     new_price = request.form.get('new_price', '').strip()
+    product = products_col.find_one({'id': product_id}, {'_id': 0})
 
-    for product in products:
-        if int(product.get('id', 0)) == product_id:
-            current_price = str(product.get('price', ''))
-            if current_price and current_price != new_price:
-                product['old_price'] = current_price
-                product['price'] = new_price
-                product['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            elif new_price:
-                product['price'] = new_price
-            break
+    if product:
+        current_price = str(product.get('price', ''))
+        if current_price and current_price != new_price:
+            products_col.update_one(
+                {'id': product_id},
+                {'$set': {'old_price': current_price, 'price': new_price, 'updated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}}
+            )
+        elif new_price:
+            products_col.update_one({'id': product_id}, {'$set': {'price': new_price}})
 
-    save_products(products)
     flash('Price updated successfully', 'success')
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/product/<int:product_id>/chat', methods=['GET', 'POST'])
 def private_chat(product_id):
     visitor_id = get_visitor_id()
-    chats = load_chats()
     chat_id = f"{product_id}_{visitor_id}"
 
-    if chat_id not in chats:
-        chats[chat_id] = {
+    chat = chats_col.find_one({'chat_id': chat_id}, {'_id': 0})
+    if not chat:
+        chat = {
+            'chat_id': chat_id,
             'product_id': product_id,
             'visitor_id': visitor_id,
             'messages': [],
@@ -292,97 +276,70 @@ def private_chat(product_id):
             'status': 'new',
             'customer_seen_reply': False
         }
+        chats_col.insert_one({**chat, '_id': str(uuid.uuid4())})
 
     if request.method == 'POST':
         message = request.form.get('message', '').strip()
         if message:
-            chats[chat_id]['messages'].append({
+            new_message = {
                 'sender': 'visitor',
                 'text': message,
                 'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            })
-            chats[chat_id]['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            chats[chat_id]['status'] = 'pending'
-            chats[chat_id]['customer_seen_reply'] = False
-            save_chats(chats)
+            }
+            chats_col.update_one(
+                {'chat_id': chat_id},
+                {'$push': {'messages': new_message},
+                 '$set': {'updated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                          'status': 'pending',
+                          'customer_seen_reply': False}}
+            )
             flash('Message sent', 'success')
         return redirect(url_for('private_chat', product_id=product_id))
 
-    product = next((p for p in load_products() if int(p.get('id', 0)) == product_id), None)
-    chat = chats[chat_id]
+    product = products_col.find_one({'id': product_id}, {'_id': 0})
+    chat = chats_col.find_one({'chat_id': chat_id}, {'_id': 0})
 
     if chat.get('status') == 'replied' and not chat.get('customer_seen_reply'):
         flash('Your message has been replied to.', 'info')
-        chat['customer_seen_reply'] = True
-        save_chats(chats)
+        chats_col.update_one({'chat_id': chat_id}, {'$set': {'customer_seen_reply': True}})
 
     return render_template('chat.html', product=product, chat=chat, chat_id=chat_id)
-
-@app.route('/product/<int:product_id>/chat/clear', methods=['POST'])
-def clear_customer_chat(product_id):
-    visitor_id = get_visitor_id()
-    chat_id = f"{product_id}_{visitor_id}"
-    chats = load_chats()
-
-    if chat_id in chats:
-        chats.pop(chat_id, None)
-        save_chats(chats)
-        flash('Chat cleared successfully.', 'success')
-    else:
-        flash('No chat found to clear.', 'warning')
-
-    return redirect(url_for('index'))
 
 @app.route('/admin/chat/<chat_id>', methods=['GET', 'POST'])
 def admin_chat(chat_id):
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
 
-    chats = load_chats()
-    if chat_id not in chats:
+    chat = chats_col.find_one({'chat_id': chat_id}, {'_id': 0})
+    if not chat:
         return redirect(url_for('admin_dashboard'))
 
     if request.method == 'POST':
         reply = request.form.get('message', '').strip()
         if reply:
-            chats[chat_id]['messages'].append({
+            new_message = {
                 'sender': 'admin',
                 'text': reply,
                 'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            })
-            chats[chat_id]['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            chats[chat_id]['status'] = 'replied'
-            chats[chat_id]['customer_seen_reply'] = False
-            save_chats(chats)
+            }
+            chats_col.update_one(
+                {'chat_id': chat_id},
+                {'$push': {'messages': new_message},
+                 '$set': {'updated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                          'status': 'replied',
+                          'customer_seen_reply': False}}
+            )
             flash('Reply sent', 'success')
         return redirect(url_for('admin_chat', chat_id=chat_id))
 
-    products = load_products()
-    product = next((p for p in products if int(p.get('id', 0)) == int(chats[chat_id]['product_id'])), None)
-    return render_template('admin_chat.html', chat=chats[chat_id], product=product, chat_id=chat_id)
-
-@app.route('/admin/chat/<chat_id>/clear', methods=['POST'])
-def clear_admin_chat(chat_id):
-    if not session.get('admin_logged_in'):
-        return redirect(url_for('admin_login'))
-
-    chats = load_chats()
-    if chat_id in chats:
-        chats.pop(chat_id, None)
-        save_chats(chats)
-        flash('Chat cleared successfully.', 'success')
-    else:
-        flash('Chat not found.', 'warning')
-
-    return redirect(url_for('admin_dashboard'))
+    product = products_col.find_one({'id': int(chat.get('product_id', 0))}, {'_id': 0})
+    return render_template('admin_chat.html', chat=chat, product=product, chat_id=chat_id)
 
 @app.route('/admin/delete_product/<int:product_id>')
 def delete_product(product_id):
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
-    products = load_products()
-    products = [p for p in products if int(p.get('id', 0)) != product_id]
-    save_products(products)
+    products_col.delete_one({'id': product_id})
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/logout')
