@@ -101,7 +101,7 @@
 
       <div class="mb-3">
         {% if product.old_price %}
-          <span class="text-muted text-decoration-line-through me-2">₦{{ product.old_price }}</span>
+          <span style="text-decoration:line-through; opacity:0.6; margin-right:8px;">₦{{ product.old_price }}</span>
         {% endif %}
         <span class="fw-bold fs-5">₦{{ product.price }}</span>
       </div>
