@@ -46,7 +46,13 @@
               <source src="{{ product.image }}">
             </video>
           {% else %}
-            <img src="{{ product.image }}" class="d-block w-100 h-100" style="object-fit:contain;" alt="{{ product.name }}">
+            <img src="{{ product.image }}"
+                 class="w-100 h-100 product-media-thumb"
+                 style="object-fit:contain; cursor:zoom-in;"
+                 alt="{{ product.name }}"
+                 data-media-type="image"
+                 data-media-src="{{ product.image }}"
+                 data-media-name="{{ product.name }}">
           {% endif %}
         {% else %}
           <div class="d-flex align-items-center justify-content-center h-100" style="color:white;">
@@ -83,14 +89,23 @@
       {% if product.image %}
         {% set ext = product.image.split('.')[-1].lower() %}
         {% if ext in ['mp4', 'webm'] %}
-          <video controls class="w-100 mb-3" style="height:180px; object-fit:contain; background:#000;">
+          <video controls class="w-100 mb-3 product-media-thumb"
+                 style="height:180px; object-fit:contain; background:#000; cursor:pointer;"
+                 data-media-type="video"
+                 data-media-src="{{ product.image }}"
+                 data-media-name="{{ product.name }}">
             <source src="{{ product.image }}">
           </video>
         {% else %}
-          <div class="mb-3 text-center" style="background:#f8f9fa; border-radius:14px; padding:10px; height:180px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
-            <img src="{{ product.image }}" alt="{{ product.name }}"
+          <div class="mb-3 text-center product-media-thumb"
+               style="background:#f8f9fa; border-radius:14px; padding:10px; height:180px; overflow:hidden; display:flex; align-items:center; justify-content:center; cursor:zoom-in;">
+            <img src="{{ product.image }}"
+                 alt="{{ product.name }}"
                  loading="lazy"
-                 style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;">
+                 style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;"
+                 data-media-type="image"
+                 data-media-src="{{ product.image }}"
+                 data-media-name="{{ product.name }}">
           </div>
         {% endif %}
       {% endif %}
@@ -101,9 +116,9 @@
 
       <div class="mb-3">
         {% if product.old_price %}
-          <span style="text-decoration:line-through; opacity:0.6; margin-right:8px;">₦{{ product.old_price }}</span>
+          <span class="old-price" style="text-decoration:line-through; opacity:0.6; margin-right:8px;">₦{{ product.old_price }}</span>
         {% endif %}
-        <span class="fw-bold fs-5">₦{{ product.price }}</span>
+        <span class="price-label fw-bold fs-5">₦{{ product.price }}</span>
       </div>
 
       <div class="d-flex gap-2 flex-wrap">
@@ -124,4 +139,57 @@
   </div>
   {% endfor %}
 </div>
+
+<div class="modal fade" id="mediaModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content bg-dark text-white">
+      <div class="modal-header border-0">
+        <h5 class="modal-title" id="mediaModalTitle">Preview</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body pt-0">
+        <div id="mediaModalBody" class="d-flex justify-content-center align-items-center">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const modalEl = document.getElementById('mediaModal');
+    const modalTitle = document.getElementById('mediaModalTitle');
+    const modalBody = document.getElementById('mediaModalBody');
+    const modal = new bootstrap.Modal(modalEl);
+
+    document.querySelectorAll('.product-media-thumb').forEach(function (el) {
+      el.addEventListener('click', function () {
+        const type = this.dataset.mediaType || 'image';
+        const src = this.dataset.mediaSrc || this.getAttribute('src');
+        const name = this.dataset.mediaName || 'Preview';
+
+        modalTitle.textContent = name;
+        modalBody.innerHTML = '';
+
+        if (type === 'video' || (src && ['mp4', 'webm'].includes(src.split('.').pop().toLowerCase()))) {
+          modalBody.innerHTML = `
+            <video controls autoplay style="max-width:100%; max-height:80vh; border-radius:14px;">
+              <source src="${src}">
+            </video>
+          `;
+        } else {
+          modalBody.innerHTML = `
+            <img src="${src}" alt="${name}" style="max-width:100%; max-height:80vh; border-radius:14px; cursor:zoom-in;">
+          `;
+        }
+
+        modal.show();
+      });
+    });
+
+    modalEl.addEventListener('hidden.bs.modal', function () {
+      modalBody.innerHTML = '';
+    });
+  });
+</script>
 {% endblock %}
