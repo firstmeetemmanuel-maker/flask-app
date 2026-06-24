@@ -3,7 +3,18 @@
 {% block content %}
 <div class="section-title">
   <div>
-    <h1 class="mb-1">Admin Dashboard</h1>
+    <h1 class="mb-1">
+      Admin Dashboard
+      {% if pending_chat_count and pending_chat_count > 0 %}
+        <a href="#pendingChatsPanel"
+           data-bs-toggle="offcanvas"
+           role="button"
+           aria-controls="pendingChatsPanel"
+           class="badge rounded-pill bg-warning text-dark ms-2 text-decoration-none">
+          {{ pending_chat_count }}
+        </a>
+      {% endif %}
+    </h1>
     <p class="muted mb-0">Manage products and conversations.</p>
   </div>
 
@@ -13,52 +24,36 @@
   </div>
 </div>
 
-<div class="row g-4 mb-4">
-  <div class="col-12 col-md-4">
-    <div class="cardx text-center">
-      <h3 class="mb-1">{{ products|length }}</h3>
-      <p class="muted mb-0">Total Products</p>
-    </div>
-  </div>
-  <div class="col-12 col-md-4">
-    <div class="cardx text-center">
-      <h3 class="mb-1">{{ chats|length }}</h3>
-      <p class="muted mb-0">Total Chats</p>
-    </div>
-  </div>
-  <div class="col-12 col-md-4">
-    <div class="cardx text-center">
-      <h3 class="mb-1">{{ pending_chat_count }}</h3>
-      <p class="muted mb-0">Pending Messages</p>
-    </div>
-  </div>
-</div>
-
 {% if pending_chats and pending_chats|length > 0 %}
-<div class="cardx mb-4">
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-    <h2 class="mb-0">Pending Chats</h2>
-    <a href="#allChats" class="btn btn-warning btn-sm">Go to All Chats</a>
+<div class="offcanvas offcanvas-end" tabindex="-1" id="pendingChatsPanel" aria-labelledby="pendingChatsPanelLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="pendingChatsPanelLabel">
+      Pending Messages ({{ pending_chats|length }})
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
   </div>
-
-  <div class="list-group">
-    {% for chat in pending_chats %}
-      <a href="{{ url_for('admin_chat', chat_id=chat.chat_id) }}"
-         class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-        <div>
-          <div class="fw-bold">Chat ID: {{ chat.chat_id }}</div>
-          <div class="small text-muted">Product ID: {{ chat.product_id }}</div>
-          <div class="small">{{ chat.last_message }}</div>
-        </div>
-        <span class="badge bg-warning text-dark">Open</span>
-      </a>
-    {% endfor %}
+  <div class="offcanvas-body">
+    <div class="list-group">
+      {% for chat in pending_chats %}
+        <a href="{{ url_for('admin_chat', chat_id=chat.chat_id) }}"
+           class="list-group-item list-group-item-action">
+          <div class="d-flex w-100 justify-content-between align-items-start">
+            <div>
+              <div class="fw-bold">Chat ID: {{ chat.chat_id }}</div>
+              <div class="small text-muted">Product ID: {{ chat.product_id }}</div>
+              <div class="small">{{ chat.last_message }}</div>
+            </div>
+            <span class="badge bg-warning text-dark ms-2">Open</span>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
   </div>
 </div>
 {% endif %}
 
 <div class="cardx mb-4">
-  <h2 class="mb-3">Add Product</h2>
+  <h2>Add Product</h2>
   <form action="{{ url_for('add_product') }}" method="POST" enctype="multipart/form-data" class="row g-3">
     <div class="col-md-6">
       <label class="form-label">Product Name</label>
@@ -93,19 +88,18 @@
       {% if product.image %}
         {% set ext = product.image.split('.')[-1].lower() %}
         {% if ext in ['mp4', 'webm'] %}
-          <video controls class="w-100 mb-3" style="max-height: 260px; object-fit: cover; background: #000;">
+          <video controls class="w-100 mb-3" style="max-height: 280px; object-fit: contain; background: #000;">
             <source src="{{ product.image }}">
           </video>
         {% else %}
-          <div class="mb-3 text-center" style="background:#f8f9fa; border-radius:14px; padding:10px; height:260px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+          <div class="mb-3 text-center" style="background:#f8f9fa; border-radius:14px; padding:10px;">
             <img src="{{ product.image }}" alt="{{ product.name }}"
-                 loading="lazy"
-                 style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;">
+                 style="max-width:100%; max-height:320px; width:auto; height:auto; object-fit:contain;">
           </div>
         {% endif %}
       {% endif %}
 
-      <h4 class="mb-1">{{ product.name }}</h4>
+      <h4>{{ product.name }}</h4>
       <div class="muted mb-2">{{ product.created_at }}</div>
       <p>{{ product.description }}</p>
 
@@ -113,7 +107,7 @@
         {% if product.old_price %}
           <span class="text-muted text-decoration-line-through me-2">₦{{ product.old_price }}</span>
         {% endif %}
-        <span class="fw-bold fs-5">₦{{ product.price }}</span>
+        <span class="fw-bold">₦{{ product.price }}</span>
       </div>
 
       <form method="POST" action="{{ url_for('update_price', product_id=product.id) }}" class="mb-3">
@@ -127,52 +121,33 @@
     </div>
   </div>
   {% else %}
-  <div class="col-12">
-    <div class="cardx">No products yet.</div>
-  </div>
+  <div class="col-12"><div class="cardx">No products yet.</div></div>
   {% endfor %}
 </div>
 
-<div class="cardx" id="allChats">
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-    <h2 class="mb-0">Chats</h2>
-    <span class="badge bg-primary">{{ chats|length }} Total</span>
-  </div>
-
-  <div class="row g-3">
-    {% for chat in chats %}
-    <div class="col-12 col-lg-6">
-      <div class="chat-msg h-100">
-        <div><strong>Chat ID:</strong> {{ chat.chat_id }}</div>
-        <div><strong>Product ID:</strong> {{ chat.product_id }}</div>
-        <div><strong>Last Message:</strong> {{ chat.last_message }}</div>
-        <div><strong>Updated:</strong> {{ chat.updated_at }}</div>
-
-        <div class="mt-2">
-          {% if chat.status == 'new' %}
-            <span class="badge text-bg-secondary">New</span>
-          {% elif chat.status == 'pending' %}
-            <span class="badge text-bg-warning">Pending</span>
-          {% elif chat.status == 'replied' %}
-            <span class="badge text-bg-success">Replied</span>
-          {% endif %}
-        </div>
-
-        <div class="mt-3 d-flex gap-2 flex-wrap">
-          <a class="btn btn-primary btn-sm" href="{{ url_for('admin_chat', chat_id=chat.chat_id) }}">Open Chat</a>
-          <form method="POST"
-                action="{{ url_for('clear_admin_chat', chat_id=chat.chat_id) }}"
-                onsubmit="return confirm('Clear this chat? This will delete all messages in this conversation.')">
-            <button type="submit" class="btn btn-danger btn-sm">Clear Chat</button>
-          </form>
-        </div>
+<div class="cardx">
+  <h2 class="mb-3">Chats</h2>
+  {% for chat in chats %}
+    <div class="chat-msg">
+      <div><strong>Chat ID:</strong> {{ chat.chat_id }}</div>
+      <div><strong>Product ID:</strong> {{ chat.product_id }}</div>
+      <div><strong>Last Message:</strong> {{ chat.last_message }}</div>
+      <div><strong>Updated:</strong> {{ chat.updated_at }}</div>
+      <div class="mt-2">
+        {% if chat.status == 'new' %}
+          <span class="badge text-bg-secondary">New</span>
+        {% elif chat.status == 'pending' %}
+          <span class="badge text-bg-warning">Pending</span>
+        {% elif chat.status == 'replied' %}
+          <span class="badge text-bg-success">Replied</span>
+        {% endif %}
+      </div>
+      <div class="mt-2">
+        <a class="btn btn-primary btn-sm" href="{{ url_for('admin_chat', chat_id=chat.chat_id) }}">Open Chat</a>
       </div>
     </div>
-    {% else %}
-    <div class="col-12">
-      <p class="muted mb-0">No chats yet.</p>
-    </div>
-    {% endfor %}
-  </div>
+  {% else %}
+    <p class="muted mb-0">No chats yet.</p>
+  {% endfor %}
 </div>
 {% endblock %}
