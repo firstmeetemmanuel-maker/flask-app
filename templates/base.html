@@ -321,6 +321,10 @@
       document.body.classList.add('dark');
     }
 
+    window.addEventListener('beforeunload', function () {
+      sessionStorage.removeItem('welcomeShown');
+    });
+
     document.addEventListener('DOMContentLoaded', function () {
       const welcome = document.getElementById('welcomeOverlay');
       const onHomePage = window.location.pathname === '/';
