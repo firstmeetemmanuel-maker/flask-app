@@ -150,8 +150,7 @@ def admin_login():
 
 @app.route('/google_login')
 def google_login():
-    flash('Google login is not connected yet.', 'warning')
-    return redirect(url_for('index'))
+    return redirect(url_for('email_login'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
