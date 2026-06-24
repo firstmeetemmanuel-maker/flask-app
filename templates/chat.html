@@ -10,7 +10,7 @@
     <a class="btn btn-dark" href="{{ url_for('index') }}">Back Home</a>
     {% if product %}
     <form method="POST"
-          action="{{ url_for('clear_customer_chat', product_id=product.id) }}"
+          action="{{ url_for('clear_chat', chat_id=chat_id) }}"
           onsubmit="return confirm('Clear this chat? This will delete all messages in this conversation.')">
       <button type="submit" class="btn btn-danger">Clear Chat</button>
     </form>
