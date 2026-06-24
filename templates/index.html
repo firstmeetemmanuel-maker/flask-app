@@ -42,12 +42,16 @@
         {% if product.image %}
           {% set ext = product.image.split('.')[-1].lower() %}
           {% if ext in ['mp4', 'webm'] %}
-            <video controls class="w-100 h-100" style="object-fit:contain; background:#000;">
+            <video controls class="w-100 h-100 product-media-trigger"
+                   style="object-fit:contain; background:#000; cursor:pointer;"
+                   data-media-type="video"
+                   data-media-src="{{ product.image }}"
+                   data-media-name="{{ product.name }}">
               <source src="{{ product.image }}">
             </video>
           {% else %}
             <img src="{{ product.image }}"
-                 class="w-100 h-100 product-media-thumb"
+                 class="w-100 h-100 product-media-trigger"
                  style="object-fit:contain; cursor:zoom-in;"
                  alt="{{ product.name }}"
                  data-media-type="image"
@@ -89,7 +93,7 @@
       {% if product.image %}
         {% set ext = product.image.split('.')[-1].lower() %}
         {% if ext in ['mp4', 'webm'] %}
-          <video controls class="w-100 mb-3 product-media-thumb"
+          <video controls class="w-100 mb-3 product-media-trigger"
                  style="height:180px; object-fit:contain; background:#000; cursor:pointer;"
                  data-media-type="video"
                  data-media-src="{{ product.image }}"
@@ -97,12 +101,13 @@
             <source src="{{ product.image }}">
           </video>
         {% else %}
-          <div class="mb-3 text-center product-media-thumb"
-               style="background:#f8f9fa; border-radius:14px; padding:10px; height:180px; overflow:hidden; display:flex; align-items:center; justify-content:center; cursor:zoom-in;">
+          <div class="mb-3 text-center"
+               style="background:#f8f9fa; border-radius:14px; padding:10px; height:180px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
             <img src="{{ product.image }}"
                  alt="{{ product.name }}"
                  loading="lazy"
-                 style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;"
+                 class="product-media-trigger"
+                 style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; cursor:zoom-in;"
                  data-media-type="image"
                  data-media-src="{{ product.image }}"
                  data-media-name="{{ product.name }}">
@@ -148,8 +153,7 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body pt-0">
-        <div id="mediaModalBody" class="d-flex justify-content-center align-items-center">
-        </div>
+        <div id="mediaModalBody" class="d-flex justify-content-center align-items-center"></div>
       </div>
     </div>
   </div>
@@ -162,7 +166,7 @@
     const modalBody = document.getElementById('mediaModalBody');
     const modal = new bootstrap.Modal(modalEl);
 
-    document.querySelectorAll('.product-media-thumb').forEach(function (el) {
+    document.querySelectorAll('.product-media-trigger').forEach(function (el) {
       el.addEventListener('click', function () {
         const type = this.dataset.mediaType || 'image';
         const src = this.dataset.mediaSrc || this.getAttribute('src');
@@ -171,7 +175,7 @@
         modalTitle.textContent = name;
         modalBody.innerHTML = '';
 
-        if (type === 'video' || (src && ['mp4', 'webm'].includes(src.split('.').pop().toLowerCase()))) {
+        if (type === 'video' || /.(mp4|webm)$/i.test(src)) {
           modalBody.innerHTML = `
             <video controls autoplay style="max-width:100%; max-height:80vh; border-radius:14px;">
               <source src="${src}">
