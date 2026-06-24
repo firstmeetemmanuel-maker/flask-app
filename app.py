@@ -49,7 +49,7 @@ def load_admin():
             "phone": "",
             "location": "",
             "opening_hours": "",
-            "footer_message": "Quality electronics at affordable prices"
+            "footer_message": "Picass Electronics 2026 • Manufactured by Bemzy"
         }
         save_admin(admin)
     return admin
@@ -166,7 +166,7 @@ def admin_settings():
         admin['phone'] = request.form.get('phone', '').strip()
         admin['location'] = request.form.get('location', '').strip()
         admin['opening_hours'] = request.form.get('opening_hours', '').strip()
-        admin['footer_message'] = request.form.get('footer_message', '').strip()
+        admin['footer_message'] = request.form.get('footer_message', 'Picass Electronics 2026 • Manufactured by Bemzy').strip()
 
         save_admin(admin)
         session['admin_name'] = admin['username']
