@@ -205,15 +205,30 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="signinModalLabel">Sign in required</h5>
+          <h5 class="modal-title" id="signinModalLabel">Sign in to continue</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
+
         <div class="modal-body">
-          Please sign in first to chat with the admin.
+          <p class="mb-3">Choose how you want to continue:</p>
+
+          <div class="d-grid gap-2">
+            <a href="{{ url_for('google_login') }}" class="btn btn-outline-danger">
+              Continue with Google
+            </a>
+
+            <a href="{{ url_for('register') }}" class="btn btn-primary">
+              Create an account
+            </a>
+
+            <a href="{{ url_for('email_login') }}" class="btn btn-outline-secondary">
+              Add an email account
+            </a>
+          </div>
         </div>
+
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <a href="{{ url_for('admin_login') }}" class="btn btn-primary">Sign In</a>
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
         </div>
       </div>
     </div>
