@@ -22,6 +22,7 @@ db = client['picass_electronics']
 products_col = db['products']
 chats_col = db['chats']
 admin_col = db['admin']
+users_col = db['users']
 
 def load_products():
     products = list(products_col.find({}, {'_id': 0}))
@@ -42,14 +43,14 @@ def load_admin():
     admin = admin_col.find_one({}, {'_id': 0})
     if not admin:
         admin = {
-            "username": "admin",
-            "password_hash": generate_password_hash("pathaan2345"),
-            "shop_name": "Picass's Electronics",
-            "whatsapp": "",
-            "phone": "",
-            "location": "",
-            "opening_hours": "",
-            "footer_message": "Picass Electronics 2026 • Manufactured by Bemzy"
+            'username': 'admin',
+            'password_hash': generate_password_hash('pathaan2345'),
+            'shop_name': "Picass's Electronics",
+            'whatsapp': '',
+            'phone': '',
+            'location': '',
+            'opening_hours': '',
+            'footer_message': 'Picass Electronics 2026 • Manufactured by Bemzy'
         }
         save_admin(admin)
     return admin
@@ -146,6 +147,63 @@ def admin_login():
 
         flash('Incorrect username or password', 'danger')
     return render_template('admin.html', admin_name=admin.get('username', 'admin'))
+
+@app.route('/google_login')
+def google_login():
+    flash('Google login is not connected yet.', 'warning')
+    return redirect(url_for('index'))
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '').strip()
+        name = request.form.get('name', '').strip()
+
+        if not email or not password:
+            flash('Email and password are required.', 'danger')
+            return redirect(url_for('register'))
+
+        existing = users_col.find_one({'email': email}, {'_id': 0})
+        if existing:
+            flash('Email already registered. Please sign in.', 'warning')
+            return redirect(url_for('email_login'))
+
+        users_col.insert_one({
+            '_id': str(uuid.uuid4()),
+            'name': name,
+            'email': email,
+            'password_hash': generate_password_hash(password),
+            'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        })
+
+        session['visitor_signed_in'] = True
+        session['visitor_email'] = email
+        session['visitor_name'] = name
+        get_visitor_id()
+        flash('Account created successfully.', 'success')
+        return redirect(url_for('index'))
+
+    return render_template('register.html')
+
+@app.route('/email_login', methods=['GET', 'POST'])
+def email_login():
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '').strip()
+        user = users_col.find_one({'email': email}, {'_id': 0})
+
+        if user and check_password_hash(user.get('password_hash', ''), password):
+            session['visitor_signed_in'] = True
+            session['visitor_email'] = email
+            session['visitor_name'] = user.get('name', '')
+            get_visitor_id()
+            flash('Signed in successfully.', 'success')
+            return redirect(url_for('index'))
+
+        flash('Invalid email or password.', 'danger')
+
+    return render_template('email_login.html')
 
 @app.route('/admin/settings', methods=['GET', 'POST'])
 def admin_settings():
@@ -279,7 +337,7 @@ def private_chat(product_id):
         return redirect(url_for('index'))
 
     visitor_id = get_visitor_id()
-    chat_id = f"{product_id}_{visitor_id}"
+    chat_id = f'{product_id}_{visitor_id}'
 
     chat = chats_col.find_one({'chat_id': chat_id}, {'_id': 0})
     if not chat:
