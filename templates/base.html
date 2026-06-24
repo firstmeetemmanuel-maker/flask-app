@@ -303,18 +303,26 @@
       document.body.classList.toggle('dark');
       localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
     }
+
     if (localStorage.getItem('theme') === 'dark') {
       document.body.classList.add('dark');
     }
+
     document.addEventListener('DOMContentLoaded', function () {
       const welcome = document.getElementById('welcomeOverlay');
-      if (welcome) {
+      const onHomePage = window.location.pathname === '/';
+      const welcomeShown = sessionStorage.getItem('welcomeShown') === '1';
+
+      if (welcome && onHomePage && !welcomeShown) {
         welcome.style.display = 'flex';
+        sessionStorage.setItem('welcomeShown', '1');
+
         setTimeout(() => {
           welcome.classList.add('hide');
           setTimeout(() => welcome.remove(), 1000);
         }, 5000);
       }
+
       const signinModal = document.getElementById('signinModal');
       if (signinModal) {
         new bootstrap.Modal(signinModal).show();
