@@ -101,6 +101,7 @@ def inject_notifications():
 @app.route('/')
 def index():
     skip_welcome = session.pop('skip_welcome', False)
+    show_signin_modal = session.pop('show_signin_modal', False)
     products = load_products()
     chats = load_chats()
     visitor_id = session.get('visitor_id')
@@ -127,7 +128,8 @@ def index():
         search_query=search_query,
         manufacturer_name="Bemzy",
         welcome_message="Welcome to Picass's electronics",
-        skip_welcome=skip_welcome
+        skip_welcome=skip_welcome,
+        show_signin_modal=show_signin_modal
     )
 
 @app.route('/admin', methods=['GET', 'POST'])
@@ -273,8 +275,8 @@ def update_price(product_id):
 def private_chat(product_id):
     if not is_visitor_signed_in():
         flash('Please sign in first to chat with the admin.', 'warning')
-        session['next_url'] = url_for('private_chat', product_id=product_id)
-        return redirect(url_for('admin_login'))
+        session['show_signin_modal'] = True
+        return redirect(url_for('index'))
 
     visitor_id = get_visitor_id()
     chat_id = f"{product_id}_{visitor_id}"
