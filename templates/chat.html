@@ -18,13 +18,6 @@
   </div>
 </div>
 
-{% if not session.get('visitor_id') %}
-<div class="alert alert-warning">
-  Please sign in first to chat with the admin.
-  <a href="{{ url_for('admin_login') }}" class="btn btn-sm btn-dark ms-2">Sign In</a>
-</div>
-{% endif %}
-
 {% if chat and chat.status == 'replied' and not chat.customer_seen_reply %}
 <div class="alert alert-info alert-dismissible fade show" role="alert">
   You have a new message from the admin. Open the conversation below.
@@ -80,7 +73,7 @@
   {% endfor %}
 </div>
 
-{% if session.get('visitor_id') %}
+{% if session.get('visitor_id') and session.get('visitor_signed_in') %}
 <div class="cardx">
   <h2 class="mb-3">Send Message</h2>
   <form method="POST">
