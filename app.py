@@ -62,6 +62,9 @@ def get_visitor_id():
         session['visitor_id'] = str(uuid.uuid4())
     return session['visitor_id']
 
+def is_visitor_signed_in():
+    return bool(session.get('visitor_signed_in'))
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -268,6 +271,11 @@ def update_price(product_id):
 
 @app.route('/product/<int:product_id>/chat', methods=['GET', 'POST'])
 def private_chat(product_id):
+    if not is_visitor_signed_in():
+        flash('Please sign in first to chat with the admin.', 'warning')
+        session['next_url'] = url_for('private_chat', product_id=product_id)
+        return redirect(url_for('admin_login'))
+
     visitor_id = get_visitor_id()
     chat_id = f"{product_id}_{visitor_id}"
 
@@ -305,7 +313,7 @@ def private_chat(product_id):
     product = products_col.find_one({'id': product_id}, {'_id': 0})
     chat = chats_col.find_one({'chat_id': chat_id}, {'_id': 0})
 
-    if chat.get('status') == 'replied' and not chat.get('customer_seen_reply'):
+    if chat and chat.get('status') == 'replied' and not chat.get('customer_seen_reply'):
         flash('Your message has been replied to.', 'info')
         chats_col.update_one({'chat_id': chat_id}, {'$set': {'customer_seen_reply': True}})
 
