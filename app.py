@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from pymongo import MongoClient
+import cloudinary
+import cloudinary.uploader
 import os
 import uuid
 from datetime import datetime
@@ -11,10 +13,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__, template_folder='templates')
 app.secret_key = os.environ.get('SECRET_KEY', 'change-this-to-a-long-random-secret-key')
 
-app.config['UPLOAD_FOLDER'] = os.path.join(BASE_DIR, 'static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'webm'}
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 MONGO_URI = os.environ.get('MONGO_URI', '')
 client = MongoClient(MONGO_URI)
@@ -23,6 +23,12 @@ products_col = db['products']
 chats_col = db['chats']
 admin_col = db['admin']
 users_col = db['users']
+
+cloudinary.config(
+    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.environ.get('CLOUDINARY_API_KEY'),
+    api_secret=os.environ.get('CLOUDINARY_API_SECRET')
+)
 
 def load_products():
     products = list(products_col.find({}, {'_id': 0}))
@@ -228,7 +234,7 @@ def admin_settings():
         admin['phone'] = request.form.get('phone', '').strip()
         admin['location'] = request.form.get('location', '').strip()
         admin['opening_hours'] = request.form.get('opening_hours', '').strip()
-        admin['footer_message'] = request.form.get('footer_message', 'Picass Electronics 2026 • Manufactured by Bemzy').strip()
+        admin['footer_message'] = request.form.get('footer_message', '').strip()
 
         save_admin(admin)
         session['admin_name'] = admin['username']
@@ -285,10 +291,16 @@ def add_product():
 
     if file and file.filename:
         if allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(save_path)
-            media_url = '/' + os.path.relpath(save_path, BASE_DIR).replace('\\', '/')
+            try:
+                upload_result = cloudinary.uploader.upload(
+                    file,
+                    resource_type='auto',
+                    folder='picass_electronics'
+                )
+                media_url = upload_result.get('secure_url', '')
+            except Exception as e:
+                flash(f'Image upload failed: {str(e)}', 'danger')
+                return redirect(url_for('admin_dashboard'))
         else:
             flash('Only image or video files are allowed', 'danger')
             return redirect(url_for('admin_dashboard'))
